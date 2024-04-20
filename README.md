@@ -1,4 +1,7 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# MessMate
+ MessMate facilitates hostel mess operations by enabling students to access daily menus and submit feedback, while empowering mess committee members to edit menus, manage inventory, and track expenses.
+
+This is a [Next.js](https://nextjs.org/) + [Prisma](https://prisma.io/docs) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
 

@@ -1,0 +1,141 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mysql"
+  relationMode = "prisma"
+  url          = env("DATABASE_URL")
+}
+
+/// Define the User model to store information about users of the system
+model User {
+  id        String           @id @default(uuid())
+  email     String           @unique
+  password  String
+  role      UserRole
+  committee CommitteeMember? // One-to-one relationship with CommitteeMember
+  Feedbacks Feedback[] // One-to-many relationship with Feedback
+}
+
+/// Define the MenuItem model to store information about each food item in the menu
+model MenuItem {
+  id            Int                    @id @default(autoincrement())
+  name          String
+  price         Float
+  availability  Int
+  InventoryItem Inventory? // One-to-one relationship with Inventory
+  Purchases     Purchase[] // One-to-many relationship with Purchase
+  schedules     MessScheduleMenuItem[] // Many-to-many relationship with MessSchedule
+}
+
+/// Define the MessScheduleMenuItem model to store the menu items scheduled for each day and meal type
+model MessScheduleMenuItem {
+  scheduleDayOfWeek DayOfWeek
+  scheduleMealType  MealType
+  menuItemId        Int
+
+  // Define foreign keys referencing MessSchedule and MenuItem
+  schedule MessSchedule @relation(fields: [scheduleDayOfWeek, scheduleMealType], references: [dayOfWeek, mealType])
+  menuItem MenuItem     @relation(fields: [menuItemId], references: [id])
+
+  // Define composite primary key
+  @@id([scheduleDayOfWeek, scheduleMealType, menuItemId])
+  @@index([menuItemId])
+}
+
+/// Define the Feedback model to store feedback submitted by students
+model Feedback {
+  studentId String   @id // Foreign key referencing User
+  message   String
+  createdAt DateTime @default(now())
+
+  // Define a many-to-one relationship with User (student)
+  Student User @relation(fields: [studentId], references: [id])
+
+  @@index([studentId])
+}
+
+/// Define the Inventory model to track food item inventory
+model Inventory {
+  itemId    Int   @id @default(autoincrement())
+  amount    Int
+  threshold Int
+  expense   Float
+
+  // Define a one-to-one relationship with MenuItem
+  menuItem MenuItem @relation(fields: [itemId], references: [id])
+}
+
+/// Define the Purchase model to track purchases of food items
+model Purchase {
+  purchaseId  Int      @id @default(autoincrement())
+  itemId      Int
+  amount      Int
+  expense     Float
+  purchasedAt DateTime @default(now())
+
+  // Define a many-to-one relationship with MenuItem
+  item MenuItem @relation(fields: [itemId], references: [id])
+
+  @@index([itemId])
+}
+
+/// Define the CommitteeMember model to store details specific to mess committee members
+model CommitteeMember {
+  userId      String   @id
+  phoneNumber Int
+  position    Position
+
+  // Define a one-to-one relationship with User
+  user User @relation(fields: [userId], references: [id])
+}
+
+/// Define the MessSchedule model to store information about the weekly schedule
+model MessSchedule {
+  // id           Int        @id @default(autoincrement())
+  dayOfWeek DayOfWeek // Enum defining days of the week
+  mealType  MealType // Enum defining meal types (e.g., Breakfast, Lunch, Dinner)
+  menuItems MessScheduleMenuItem[] // Array of MenuItem for the menu items scheduled for the day and meal type
+
+  // Optionally, you can include additional fields such as time of serving, special notes, etc.
+  @@id([dayOfWeek, mealType])
+}
+
+// Define the DayOfWeek enum to represent different days of the week
+enum DayOfWeek {
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+
+// Define the MealType enum to represent different meal types
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+}
+
+/// Define the UserRole enum to differentiate between student and committee member roles
+enum UserRole {
+  STUDENT
+  COMMITTEE_MEMBER
+}
+
+// Define the Position enum to represent different positions within the mess committee
+enum Position {
+  PRESIDENT
+  VICE_PRESIDENT
+  SECRETARY
+  MEMBER
+}
